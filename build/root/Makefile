@@ -292,6 +292,47 @@ test-e2e-node: ginkgo
 	hack/make-rules/test-e2e-node.sh
 endif
 
+define TEST_E2E_NODE_LOCAL_HELP_INFO
+# Build and run node end-to-end tests locally using Docker.
+# Solves GitHub issue #137722 - "node_e2e are really painful to setup"
+# Provides easy local testing without requiring GCP accounts or complex infrastructure.
+#
+# Args:
+#  FOCUS: Regexp that matches the tests to be run.  Defaults to "".
+#  SKIP: Regexp that matches tests that needs to be skipped.
+#    Defaults to "\[Flaky\]|\[Slow\]|\[Serial\]".
+#  PARALLELISM: The number of ginkgo nodes to run.  Defaults to 1.
+#  TEST_ARGS: A space-separated list of arguments to pass to node e2e test.
+#    Defaults to "".
+#  BUILD_DEPENDENCIES: If true, build all dependencies.  Defaults to true.
+#
+# Example:
+#   make test-e2e-node-local
+#   make test-e2e-node-local FOCUS="Kubelet"
+#   make test-e2e-node-local PARALLELISM=4
+#   make test-e2e-node-local TEST_ARGS="--prepull-images=false"
+#   make test-e2e-node-local BUILD_DEPENDENCIES=false
+endef
+.PHONY: test-e2e-node-local
+ifeq ($(PRINT_HELP),y)
+test-e2e-node-local:
+	echo "$$TEST_E2E_NODE_LOCAL_HELP_INFO"
+else
+test-e2e-node-local:
+	@if [ ! -f "test/e2e_node/local/run-local-e2e.sh" ]; then \
+		echo "Error: Local node e2e testing script not found."; \
+		echo "Please ensure you're running this from the Kubernetes root directory."; \
+		exit 1; \
+	fi
+	@echo "Running node e2e tests locally using Docker..."
+	@env FOCUS="$(FOCUS)" \
+		SKIP="$(SKIP)" \
+		PARALLELISM="$(PARALLELISM)" \
+		TEST_ARGS="$(TEST_ARGS)" \
+		BUILD_DEPENDENCIES="$(BUILD_DEPENDENCIES)" \
+		./test/e2e_node/local/run-local-e2e.sh
+endif
+
 define TEST_CMD_HELP_INFO
 # Build and run cmdline tests.
 #

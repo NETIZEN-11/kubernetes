@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  node-e2e:
+    build:
+      context: ..
+      dockerfile: local/Dockerfile
+    container_name: k8s-node-e2e
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - ../..:/kubernetes:rw
+      - /tmp:/tmp:rw
+      - /var/lib/containerd:/var/lib/containerd:rw
+      - /var/lib/kubelet:/var/lib/kubelet:rw
+      - /run/containerd:/run/containerd:rw
+    network_mode: host
+    pid: host
+    environment:
+      - CONTAINER_RUNTIME_ENDPOINT=unix:///run/containerd/containerd.sock
+      - IMAGE_SERVICE_ENDPOINT=unix:///run/containerd/containerd.sock
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    working_dir: /kubernetes
